@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4a0 - Draft & Simulador de Campeonatos</title>
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="dados.js"></script>
+</head>
+<body>
+
+    <button class="theme-toggle-btn" onclick="toggleInterfaceTheme()">☀️ / 🌙</button>
+
+    <div id="main-menu">
+        <h1>4a0 • LIGA PORTUGUESA</h1>
+        <div class="menu-subtitle">Modo Época Perfeita: Conquista os 102 pontos na Liga Portugal (34 vitórias) e garante de forma invicta todas as Taças nacionais e europeias.</div>
+        
+        <div class="db-stats-box">
+            <div class="stat-item">
+                <div class="stat-val" id="st-reg">0</div>
+                <div class="stat-lbl">Equipas</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val" id="st-clb">0</div>
+                <div class="stat-lbl">Clubes Base</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val" id="st-jog">0</div>
+                <div class="stat-lbl">Jogadores</div>
+            </div>
+        </div>
+
+        <div class="setup-group">
+            <span class="section-label">Formação</span>
+            <div class="selector-grid" id="group-formations">
+                <div class="selector-card active-card" onclick="setForm('4-3-3', this)">4-3-3</div>
+                <div class="selector-card" onclick="setForm('4-4-2', this)">4-4-2</div>
+                <div class="selector-card" onclick="setForm('5-3-2', this)">5-3-2</div>
+                <div class="selector-card" onclick="setForm('3-5-2', this)">3-5-2</div>
+                <div class="selector-card" onclick="setForm('5-4-1', this)">5-4-1</div>
+                <div class="selector-card" onclick="setForm('3-4-3', this)">3-4-3</div>
+            </div>
+        </div>
+
+        <div class="setup-group">
+            <span class="section-label">Dificuldade</span>
+            <div class="selector-grid" id="group-difficulties" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="selector-card active-card" onclick="setDiff('easy', this)">Fácil</div>
+                <div class="selector-card" onclick="setDiff('medium', this)">Médio</div>
+                <div class="selector-card" onclick="setDiff('hard', this)">Difícil</div>
+            </div>
+        </div>
+        <div class="difficulty-desc" id="lbl-diff-desc">Permite equipas All-Time e concede 3 baralhamentos livres.</div>
+
+        <button class="btn btn-gold-action btn-large" onclick="startDraftSession()">START DRAFT</button>
+    </div>
+
+    <div id="game-container">
+        <div class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--border-color); padding-bottom: 12px;">
+                <span id="round-title" style="font-weight: 900; text-transform: uppercase;">Ronda 1 de 11</span>
+                <span id="reroll-counter" style="font-size:12px; font-weight:900; color:var(--pt-red); display:none;">Baralhamentos: 3</span>
+            </div>
+            
+            <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <button id="btn-trigger-draw" class="btn btn-green btn-large" onclick="drawNextTeamSquad()">Sortear Equipa</button>
+                <button id="btn-trigger-reroll" class="btn btn-red btn-large" style="display:none;" onclick="executeReroll()">Baralhar Opções</button>
+            </div>
+
+            <div id="draw-squad-zone" style="display: none;">
+                <div id="display-team-name" class="team-title">Equipa</div>
+                <div id="display-players-grid" class="players-grid"></div>
+            </div>
+            
+            <div id="projection-zone" class="projection-card">
+                <h3 style="margin-bottom:10px;">Previsão da Época (Casas de Apostas)</h3>
+                <div style="font-size:36px; font-weight:900; color:var(--pt-green); margin:10px 0;" id="proj-place">1º Lugar</div>
+                <div style="font-size:13px; font-weight:800; margin-bottom:15px;">Pontos Esperados: <span id="proj-points" style="color:var(--pt-gold)">85</span> pts</div>
+                
+                <div class="odds-bar-container">
+                    <div class="odds-label"><span>Vencer a Liga Portuguesa</span><span id="txt-odd-1">0%</span></div>
+                    <div class="odds-bar-bg"><div id="bar-odd-1" class="odds-bar-fill"></div></div>
+                </div>
+                <div class="odds-bar-container">
+                    <div class="odds-label"><span>Vencer a Taça de Portugal</span><span id="txt-odd-2">0%</span></div>
+                    <div class="odds-bar-bg"><div id="bar-odd-2" class="odds-bar-fill" style="background:#2563eb;"></div></div>
+                </div>
+                <div class="odds-bar-container">
+                    <div class="odds-label"><span>Vencer a Taça da Liga</span><span id="txt-odd-3">0%</span></div>
+                    <div class="odds-bar-bg"><div id="bar-odd-3" class="odds-bar-fill" style="background:#a855f7;"></div></div>
+                </div>
+                <div class="odds-bar-container">
+                    <div class="odds-label"><span>Vencer a UEFA Champions League</span><span id="txt-odd-4">0%</span></div>
+                    <div class="odds-bar-bg"><div id="bar-odd-4" class="odds-bar-fill" style="background:#d97706;"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="stadium-wrapper">
+                <div class="ad-boards"><span>★ 4A0PT.COM</span><span>LIGA PORTUGUESA SIMULADOR</span><span>TAÇA DE PORTUGAL ★</span></div>
+                <div class="football-pitch" id="live-pitch"></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-top:20px; text-align:center; font-size:12px; font-weight:900;">
+                <div style="background:var(--card-inline-bg); padding:10px; border:2px solid var(--border-color); border-radius:6px;">DEF: <span id="ovr-def" style="color:#2563eb;">0</span></div>
+                <div style="background:var(--card-inline-bg); padding:10px; border:2px solid var(--border-color); border-radius:6px;">MED: <span id="ovr-med" style="color:#059669;">0</span></div>
+                <div style="background:var(--card-inline-bg); padding:10px; border:2px solid var(--border-color); border-radius:6px;">ATA: <span id="ovr-ata" style="color:#dc2626;">0</span></div>
+                <div style="background:var(--border-color); color:var(--bg-card); padding:10px; border-radius:6px;">GER: <span id="ovr-tot">0</span></div>
+            </div>
+
+            <button id="btn-simulate-season" class="btn btn-green btn-large" style="margin-top:20px; display:none;" onclick="runSeasonSimulation()">Simular Temporada</button>
+        </div>
+    </div>
+
+    <div id="simulation-screen">
+        <h2 id="sim-title" style="font-size:28px;">Resumo Geral da Temporada</h2>
+        <div id="simulation-matches-timeline"></div>
+        <button class="btn btn-gold-action btn-large" style="margin-top:25px;" onclick="location.reload()">Jogar Nova Época</button>
+    </div>
+
+    <div class="footer-credits">
+        Inspired by <a href="https://www.82-0.com" target="_blank" style="color:inherit; font-weight:700; text-decoration:none;">82-0.com</a> & <a href="https://38-0.app" target="_blank" style="color:inherit; font-weight:700; text-decoration:none;">38-0.app</a>
+        <div class="footer-links">
+            <a href="mailto:suporte.4a0@gmail.com?subject=Feedback%204a0%20Draft">Feedback / Contact</a>
+            <a href="https://buymeacoffee.com/4a0Portugal" target="_blank">Paga-me um café</a>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
