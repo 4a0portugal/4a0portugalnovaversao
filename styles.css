@@ -582,17 +582,17 @@ h3 { font-size: 20px; }
     to { box-shadow: 0 0 16px #eab308; }
 }
 
-/* RESPONSIVIDADE ADAPTADA PARA TELEMÓVEL (FIXING SMARTPHONES) */
+/* RESPONSIVIDADE ULTRA-OTIMIZADA PARA TELEMÓVEL (SUBSTITUI O BLOCO @media ANTIGO NO TEU STYLES.CSS) */
 @media (max-width: 768px) {
     body { padding: 15px 10px; }
-    #main-menu, #simulation-screen { padding: 25px 15px; margin-top: 20px; }
+    #main-menu, #simulation-screen { padding: 25px 15px; margin-top: 20px; width: 100%; box-sizing: border-box; }
     h1 { font-size: 24px; }
     h2 { font-size: 20px; }
     .selector-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 24px; }
     .db-stats-box { gap: 10px; padding: 15px 5px; margin-bottom: 24px; }
     .stat-val { font-size: 18px; }
     .stat-lbl { font-size: 9px; }
-    .panel { padding: 20px 12px; }
+    .panel { padding: 20px 12px; width: 100%; box-sizing: border-box; }
     .football-pitch { height: 460px; }
     .pitch-player-node { width: 52px; height: 52px; }
     .pitch-player-node .node-name { max-width: 46px; font-size: 8px; }
@@ -600,4 +600,31 @@ h3 { font-size: 20px; }
     .players-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 360px; }
     .footer-links { flex-direction: column; gap: 12px; align-items: center; }
     .footer-links a { width: 80%; display: block; box-sizing: border-box; }
+
+    /* CORREÇÃO XPTO DE FLUIDEZ E DESLIZE PARA AS TABELAS DE PÓS-SIMULAÇÃO */
+    .comp-block-container, .match-card {
+        padding: 20px 12px;
+        overflow-x: auto; /* Ativa o deslizamento horizontal se a tabela não couber */
+        -webkit-overflow-scrolling: touch; /* Garante que o scroll no iPhone é suave */
+    }
+    
+    .league-table {
+        min-width: 580px; /* Impede as colunas de estatísticas de encolherem ou quebrarem linha */
+        font-size: 11px; /* Tamanho de letra perfeito para tabelas mobile */
+    }
+    
+    .league-table th, .league-table td {
+        padding: 10px 6px;
+        text-align: center;
+    }
+    
+    /* Alinhamento estético e controlo de texto longo para a coluna dos clubes */
+    .league-table th:nth-child(2), 
+    .league-table td:nth-child(2) {
+        text-align: left;
+        max-width: 150px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Adiciona '...' se o nome do clube for gigante */
+    }
 }
