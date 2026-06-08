@@ -30,10 +30,6 @@ const colorMap = {
 };
 
 window.addEventListener('DOMContentLoaded', () => {
-    let record = localStorage.getItem("4a0_pts_record") || 0;
-    const recLabel = document.getElementById("ui-local-record-label");
-    if (recLabel) recLabel.innerText = `🏆 Recorde Pessoal Registado: ${record} Pontos na Liga`;
-
     if (typeof database !== 'undefined' && database.length > 0) {
         document.getElementById("st-reg").innerText = database.length;
         let stems = new Set(database.map(e => e.id.split('_')[0]));
@@ -75,10 +71,7 @@ function startDraftSession() {
         });
     });
 
-    lockedNamesRegistry = [];
-    sessionTeamsHistory = [];
-    activeRoundCount = 0;
-    playerAwaitingPlacement = null;
+    lockedNamesRegistry = []; sessionTeamsHistory = []; activeRoundCount = 0; playerAwaitingPlacement = null;
     remainingRerolls = (selectedDifficulty === "easy") ? 3 : 0;
     
     const uiReroll = document.getElementById("reroll-counter");
@@ -240,11 +233,12 @@ function calculateTeamOveralls() {
     return { def: aDef, med: aMed, ata: aAta, ger: aTot };
 }
 
+/* CURVA DE ODDS FLUIDA E PROGRESSIVA SOLICITADA */
 function computeDynamicOdds(ovr, targetMin) {
-    let diff = ovr - (targetMin - 6);
-    if (diff <= 0) return 2;
-    let pct = Math.round((diff / 8) * 92);
-    return Math.max(2, Math.min(98, pct));
+    let base = 50;
+    let diff = ovr - targetMin;
+    let pct = base + (diff * 7); 
+    return Math.max(1, Math.min(99, Math.round(pct)));
 }
 
 function evalCupStage(userStats, reqMed, reqSec) {
@@ -298,7 +292,7 @@ function runSeasonSimulation() {
     if (meetsLiga && Math.random() > 0.02) {
         tableData.forEach(t => { 
             if(t.isUser) { t.points = 102; t.w = 34; t.gf = 98; t.ga = 12; } 
-            else { t.points = Math.floor(Math.random()*50)+26; t.w = Math.floor(t.points/3); t.d = t.points%3; t.l = 34-t.w-t.d; t.gf = Math.floor(Math.random()*35)+30; t.ga = Math.floor(Math.random()*30)+45; } 
+            else { t.points = Math.floor(Math.random()*48)+24; t.w = Math.floor(t.points/3); t.d = t.points%3; t.l = 34-t.w-t.d; t.gf = Math.floor(Math.random()*35)+25; t.ga = Math.floor(Math.random()*25)+45; } 
         });
     } else {
         for (let i = 0; i < tableData.length; i++) {
@@ -326,6 +320,7 @@ function runSeasonSimulation() {
     let tpStatus6 = tpStatus5 ? evalCupStage(scores, 84, 82) : false; if(tpStatus5) appendDetailedMatchCard(blockTP, "Grande Final (Jamor)", tableData[0], chosenLeagueClubs[1], tpStatus6, false);
     timeline.appendChild(blockTP);
 
+    /* INJEÇÃO BLINDADA DO ARRAY DE POTÊNCIAS DA UCL EVITANDO INDEX OUT OF BOUNDS */
     const blockUCL = document.createElement("div"); blockUCL.className = "comp-block-container"; blockUCL.innerHTML = "<h2>UEFA Champions League</h2>";
     let uclPoolRaw = database.filter(e => e.isChampionsOnly === true || e.isChampionsOnly === "true");
     let uniqueUclClubs = []; let uniqueNamesSet = new Set();
@@ -333,15 +328,16 @@ function runSeasonSimulation() {
         let baseName = c.nomeEquipa.replace(/\s\d+$/, "").trim();
         if(!uniqueNamesSet.has(baseName)) { uniqueNamesSet.add(baseName); uniqueUclClubs.push(c); }
     });
-    let safetyNames = ["Arsenal", "Napoli", "Marseille", "Roma", "Lazio", "Sevilla", "Villarreal", "Lyon UCL", "Fiorentina", "Bayer Leverkusen", "Dortmund", "Monaco UCL", "Feyenoord", "Ajax UCL"];
+    let safetyNames = ["Arsenal", "Napoli", "Marseille", "Roma", "Lazio", "Sevilla", "Villarreal", "Lyon UCL", "Fiorentina", "Leverkusen", "Dortmund", "Monaco UCL", "Feyenoord", "Ajax UCL", "Milan UCL", "Man United", "Newcastle", "Real Sociedad", "Atalanta", "Frankfurt"];
     let sIdx = 0;
-    while(uniqueUclClubs.length < 35 && sIdx < safetyNames.length) {
-        let n = safetyNames[sIdx++];
+    while(uniqueUclClubs.length < 40) {
+        let n = safetyNames[sIdx % safetyNames.length];
         if(!uniqueNamesSet.has(n)) uniqueUclClubs.push({ nomeEquipa: n, jogadores: [] });
+        sIdx++;
     }
 
-    let uclTable = [{ id: "user", name: "A Tua Equipa (Draft)", points: 0, w:0, d:0, l:0, gf: 0, ga: 0, isUser: true }];
-    for(let k=0; k<35; k++) { uclTable.push({ id: `cpu_${k}`, name: uniqueUclClubs[k].nomeEquipa, points: 0, w:0, d:0, l:0, gf: 0, ga: 0, isUser: false }); }
+    let uclTable = [{ id: "user", name: "A Tua Equipa (Draft)", points: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, isUser: true }];
+    for(let k=0; k<35; k++) { uclTable.push({ id: `cpu_${k}`, name: uniqueUclClubs[k].nomeEquipa, points: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, isUser: false }); }
 
     for (let m = 1; m <= 8; m++) {
         let oppInTable = uclTable[m]; let winM = evalCupStage(scores, 88, 86);
@@ -358,8 +354,7 @@ function runSeasonSimulation() {
     }
 
     for(let k=1; k<36; k++) { 
-        let rngPts = Math.floor(Math.random()*13)+5;
-        uclTable[k].points += rngPts;
+        let rngPts = Math.floor(Math.random()*13)+5; uclTable[k].points += rngPts;
         uclTable[k].w = Math.floor(rngPts/3); uclTable[k].d = rngPts%3; uclTable[k].l = 8 - uclTable[k].w - uclTable[k].d;
         uclTable[k].gf += Math.floor(Math.random()*14)+4; uclTable[k].ga += Math.floor(Math.random()*10)+4;
     }
@@ -369,7 +364,6 @@ function runSeasonSimulation() {
     let clTableHtml = `<div class="match-card"><h3>Classificação Fase de Liga (36 Equipas)</h3><table class="league-table"><thead><tr><th>Pos</th><th>Equipa</th><th>Pnt</th><th>V</th><th>E</th><th>D</th><th>GM</th><th>GS</th></tr></thead><tbody>`;
     uclTable.forEach((row, idx) => {
         let rowClass = row.isUser ? 'user-team-row' : '';
-        if(idx < 8 && row.isUser) rowClass = 'user-team-row';
         clTableHtml += `<tr class="${rowClass}"><td>${idx + 1}º</td><td>${row.name}</td><td><b>${row.points}</b></td><td>${row.w}</td><td>${row.d}</td><td>${row.l}</td><td>${row.gf}</td><td>${row.ga}</td></tr>`;
     });
     clTableHtml += `</tbody></table></div>`;
@@ -381,19 +375,26 @@ function runSeasonSimulation() {
     }
 
     let chStatus = userRank <= 8 ? true : evalCupStage(scores, 88, 86); 
-    if(userRank > 8) { appendTwoLeggedTie(blockUCL, "Playoffs de Acesso", tableData[0], uniqueUclClubs[18], chStatus); }
-    let chStatus2 = chStatus ? evalCupStage(scores, 88, 86) : false; if(chStatus) { appendTwoLeggedTie(blockUCL, "Oitavos de Final", tableData[0], uniqueUclClubs[19], chStatus2); }
-    let chStatus3 = chStatus2 ? evalCupStage(scores, 88, 86) : false; if(chStatus2) { appendTwoLeggedTie(blockUCL, "Quartos de Final", tableData[0], uniqueUclClubs[20], chStatus3); }
-    let chStatus4 = chStatus3 ? evalCupStage(scores, 88, 86) : false; if(chStatus3) { appendTwoLeggedTie(blockUCL, "Meias-Finais", tableData[0], uniqueUclClubs[21], chStatus4); }
-    let chStatus5 = chStatus4 ? evalCupStage(scores, 88, 86) : false; if(chStatus4) appendDetailedMatchCard(blockUCL, "Grande Final Europeia (Jogo Único)", tableData[0], uniqueUclClubs[22], chStatus5, false);
+    if(userRank > 8) { appendTwoLeggedTie(blockUCL, "Playoffs de Acesso", tableData[0], uniqueUclClubs[15], chStatus); }
+    let chStatus2 = chStatus ? evalCupStage(scores, 88, 86) : false; if(chStatus) { appendTwoLeggedTie(blockUCL, "Oitavos de Final", tableData[0], uniqueUclClubs[16], chStatus2); }
+    let chStatus3 = chStatus2 ? evalCupStage(scores, 88, 86) : false; if(chStatus2) { appendTwoLeggedTie(blockUCL, "Quartos de Final", tableData[0], uniqueUclClubs[17], chStatus3); }
+    let chStatus4 = chStatus3 ? evalCupStage(scores, 88, 86) : false; if(chStatus3) { appendTwoLeggedTie(blockUCL, "Meias-Finais", tableData[0], uniqueUclClubs[18], chStatus4); }
+    let chStatus5 = chStatus4 ? evalCupStage(scores, 88, 86) : false; if(chStatus4) appendDetailedMatchCard(blockUCL, "Grande Final Europeia (Jogo Único)", tableData[0], uniqueUclClubs[19], chStatus5, false);
     timeline.appendChild(blockUCL);
 
     let completelyPerfect = (tableData[0].w === 34 && tlStatus3 && tpStatus6 && chStatus5 && scores.ger >= 90 && scores.def >= 88 && scores.med >= 88 && scores.ata >= 88);
     if (completelyPerfect) { screen.classList.add("perfect-screen"); const b = document.createElement("div"); b.style.cssText = "background:#eab308; color:#0f172a; padding:20px; border-radius:8px; font-weight:900; font-size:22px; text-align:center; margin-bottom:20px;"; b.innerText = "⭐ LENDA ABSOLUTA: ALCANÇASTE O 4a0 PERFEITO! QUADRUPLE INVICTO COM OVERALL DE CAMPEÃO ⭐"; timeline.insertBefore(b, timeline.firstChild); }
 }
 
+/* BALANÇO DE DIFICULDADE ATUALIZADO DINAMICAMENTE NO CONFRONTO */
 function determineLgPlacementGolos(teamA, teamB) {
-    const diff = teamA.ger - teamB.ger; const probA = 0.46 + (diff * 0.035); const rng = Math.random();
+    let gerA = teamA.ger; let gerB = teamB.ger;
+    if (!teamA.isUser && selectedDifficulty === "medium") gerA += 4;
+    if (!teamA.isUser && selectedDifficulty === "hard") gerA += 8;
+    if (!teamB.isUser && selectedDifficulty === "medium") gerB += 4;
+    if (!teamB.isUser && selectedDifficulty === "hard") gerB += 8;
+
+    const diff = gerA - gerB; const probA = 0.43 + (diff * 0.035); const rng = Math.random();
     let gA = 0, gB = 0;
     if (rng < probA) { teamA.points += 3; teamA.w++; teamB.l++; gA = Math.floor(Math.random()*3)+1; gB = Math.floor(Math.random()*gA); } 
     else if (rng < probA + 0.22) { teamA.points += 1; teamB.points += 1; teamA.d++; teamB.d++; gA = Math.floor(Math.random()*2); gB = gA; } 
