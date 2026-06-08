@@ -2079,7 +2079,6 @@ const RAW_DATABASE = [
       { "nome": "José Augusto Torres", "posicoes": ["PL"], "ovr": 81 }
     ]
   }
-]; // <--- CORRIGIDO: REMOVIDAS AS DUPLICAÇÕES E FILTRADO PARA UM ÚNICO FECHO DE ARRAY
 ];
-
 const database = RAW_DATABASE.map(normalizarEquipa);
+window.database = database;
