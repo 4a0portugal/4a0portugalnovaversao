@@ -240,6 +240,13 @@ function calculateTeamOveralls() {
     return { def: aDef, med: aMed, ata: aAta, ger: aTot };
 }
 
+function computeDynamicOdds(ovr, targetMin) {
+    let diff = ovr - (targetMin - 6);
+    if (diff <= 0) return 2;
+    let pct = Math.round((diff / 8) * 92);
+    return Math.max(2, Math.min(98, pct));
+}
+
 function evalCupStage(userStats, reqMed, reqSec) {
     if (userStats.ger >= reqMed && userStats.def >= reqSec && userStats.med >= reqSec && userStats.ata >= reqSec) {
         return Math.random() > 0.02;
@@ -305,18 +312,18 @@ function runSeasonSimulation() {
     const tableDiv = document.createElement("div"); tableDiv.innerHTML = tableHtml; blockLiga.appendChild(tableDiv); timeline.appendChild(blockLiga);
 
     const blockTL = document.createElement("div"); blockTL.className = "comp-block-container"; blockTL.innerHTML = "<h2>Taça da Liga</h2>";
-    let tl1 = evalCupStage(scores, 82, 80); appendDetailedMatchCard(blockTL, "Quartos de Final (Jogo Único)", tableData[0], chosenLeagueClubs[0], tl1, false);
-    let tl2 = tl1 ? evalCupStage(scores, 82, 80) : false; if(tl1) appendDetailedMatchCard(blockTL, "Meia-Final (Final Four)", tableData[0], chosenLeagueClubs[1], tl2, false);
-    let tl3 = tl2 ? evalCupStage(scores, 82, 80) : false; if(tl2) appendDetailedMatchCard(blockTL, "Grande Final", tableData[0], chosenLeagueClubs[2], tl3, false);
+    let tlStatus = evalCupStage(scores, 82, 80); appendDetailedMatchCard(blockTL, "Quartos de Final (Jogo Único)", tableData[0], chosenLeagueClubs[0], tlStatus, false);
+    let tlStatus2 = tlStatus ? evalCupStage(scores, 82, 80) : false; if(tlStatus) appendDetailedMatchCard(blockTL, "Meia-Final (Final Four)", tableData[0], chosenLeagueClubs[1], tlStatus2, false);
+    let tlStatus3 = tlStatus2 ? evalCupStage(scores, 82, 80) : false; if(tlStatus2) appendDetailedMatchCard(blockTL, "Grande Final", tableData[0], chosenLeagueClubs[2], tlStatus3, false);
     timeline.appendChild(blockTL);
 
     const blockTP = document.createElement("div"); blockTP.className = "comp-block-container"; blockTP.innerHTML = "<h2>Taça de Portugal</h2>";
-    let tp1 = evalCupStage(scores, 84, 82); appendDetailedMatchCard(blockTP, "32 avos de Final", tableData[0], chosenLeagueClubs[3], tp1, false);
-    let tp2 = tp1 ? evalCupStage(scores, 84, 82) : false; if(tp1) appendDetailedMatchCard(blockTP, "16 avos de Final", tableData[0], chosenLeagueClubs[4], tp2, false);
-    let tp3 = tp2 ? evalCupStage(scores, 84, 82) : false; if(tp2) appendDetailedMatchCard(blockTP, "8 avos de Final", tableData[0], chosenLeagueClubs[5], tp3, false);
-    let tp4 = tp3 ? evalCupStage(scores, 84, 82) : false; if(tp3) appendDetailedMatchCard(blockTP, "Quartos de Final (Jogo Único)", tableData[0], chosenLeagueClubs[6], tp4, false);
-    let tp5 = tp4 ? evalCupStage(scores, 84, 82) : false; if(tp4) { appendTwoLeggedTie(blockTP, "Meia-Final", tableData[0], chosenLeagueClubs[0], tp5); }
-    let tp6 = tp5 ? evalCupStage(scores, 84, 82) : false; if(tp5) appendDetailedMatchCard(blockTP, "Grande Final (Jamor)", tableData[0], chosenLeagueClubs[1], tp6, false);
+    let tpStatus = evalCupStage(scores, 84, 82); appendDetailedMatchCard(blockTP, "32 avos de Final", tableData[0], chosenLeagueClubs[3], tpStatus, false);
+    let tpStatus2 = tpStatus ? evalCupStage(scores, 84, 82) : false; if(tpStatus) appendDetailedMatchCard(blockTP, "16 avos de Final", tableData[0], chosenLeagueClubs[4], tpStatus2, false);
+    let tpStatus3 = tpStatus2 ? evalCupStage(scores, 84, 82) : false; if(tpStatus2) appendDetailedMatchCard(blockTP, "8 avos de Final", tableData[0], chosenLeagueClubs[5], tpStatus3, false);
+    let tpStatus4 = tpStatus3 ? evalCupStage(scores, 84, 82) : false; if(tpStatus3) appendDetailedMatchCard(blockTP, "Quartos de Final (Jogo Único)", tableData[0], chosenLeagueClubs[6], tpStatus4, false);
+    let tpStatus5 = tpStatus4 ? evalCupStage(scores, 84, 82) : false; if(tpStatus4) { appendTwoLeggedTie(blockTP, "Meia-Final", tableData[0], chosenLeagueClubs[0], tpStatus5); }
+    let tpStatus6 = tpStatus5 ? evalCupStage(scores, 84, 82) : false; if(tpStatus5) appendDetailedMatchCard(blockTP, "Grande Final (Jamor)", tableData[0], chosenLeagueClubs[1], tpStatus6, false);
     timeline.appendChild(blockTP);
 
     const blockUCL = document.createElement("div"); blockUCL.className = "comp-block-container"; blockUCL.innerHTML = "<h2>UEFA Champions League</h2>";
@@ -326,43 +333,62 @@ function runSeasonSimulation() {
         let baseName = c.nomeEquipa.replace(/\s\d+$/, "").trim();
         if(!uniqueNamesSet.has(baseName)) { uniqueNamesSet.add(baseName); uniqueUclClubs.push(c); }
     });
-    while(uniqueUclClubs.length < 35) { uniqueUclClubs.push({ nomeEquipa: "Poder Europeu Sorteado", jogadores: [{nome:"Trunfo",ovr:85}] }); }
+    let safetyNames = ["Arsenal", "Napoli", "Marseille", "Roma", "Lazio", "Sevilla", "Villarreal", "Lyon UCL", "Fiorentina", "Bayer Leverkusen", "Dortmund", "Monaco UCL", "Feyenoord", "Ajax UCL"];
+    let sIdx = 0;
+    while(uniqueUclClubs.length < 35 && sIdx < safetyNames.length) {
+        let n = safetyNames[sIdx++];
+        if(!uniqueNamesSet.has(n)) uniqueUclClubs.push({ nomeEquipa: n, jogadores: [] });
+    }
 
-    let uclTable = [{ id: "user", name: "A Tua Equipa (Draft)", points: 0, gf: 0, ga: 0, isUser: true }];
-    for(let k=0; k<35; k++) { uclTable.push({ id: `cpu_${k}`, name: uniqueUclClubs[k].nomeEquipa, points: 0, gf: 0, ga: 0, isUser: false }); }
+    let uclTable = [{ id: "user", name: "A Tua Equipa (Draft)", points: 0, w:0, d:0, l:0, gf: 0, ga: 0, isUser: true }];
+    for(let k=0; k<35; k++) { uclTable.push({ id: `cpu_${k}`, name: uniqueUclClubs[k].nomeEquipa, points: 0, w:0, d:0, l:0, gf: 0, ga: 0, isUser: false }); }
 
     for (let m = 1; m <= 8; m++) {
         let oppInTable = uclTable[m]; let winM = evalCupStage(scores, 88, 86);
         let gA = 0, gB = 0;
-        if(winM) { uclTable[0].points += 3; gA = Math.floor(Math.random()*3)+1; gB = Math.floor(Math.random()*gA); } 
-        else { if(Math.random() > 0.45) { uclTable[0].points += 1; oppInTable.points += 1; gA = Math.floor(Math.random()*2); gB = gA; } else { oppInTable.points += 3; gB = Math.floor(Math.random()*3)+1; gA = Math.floor(Math.random()*gB); } }
+        if(winM) { uclTable[0].points += 3; uclTable[0].w++; gA = Math.floor(Math.random()*3)+1; gB = Math.floor(Math.random()*gA); } 
+        else { 
+            if(Math.random() > 0.45) { uclTable[0].points += 1; oppInTable.points += 1; uclTable[0].d++; oppInTable.d++; gA = Math.floor(Math.random()*2); gB = gA; } 
+            else { oppInTable.points += 3; oppInTable.w++; uclTable[0].l++; gB = Math.floor(Math.random()*3)+1; gA = Math.floor(Math.random()*gB); } 
+        }
         uclTable[0].gf += gA; uclTable[0].ga += gB; oppInTable.gf += gB; oppInTable.ga += gA;
-        
         let oppOriginal = uniqueUclClubs[m-1];
         let goalsLog = generateScorersBlock(gA > 0, gA, localScorers, gB > 0, gB, oppOriginal.jogadores ? oppOriginal.jogadores.map(n => n.nome) : ["Oponente"]);
         const mCard = document.createElement("div"); mCard.className = "match-card"; mCard.innerHTML = `<div class="match-header"><span>Jogo ${m} (${m<=4?'Casa':'Fora'})</span><span style="color:${gA>gB?'var(--pt-green)':gA===gB?'var(--pt-amber)':'var(--pt-red)'}">${gA>gB?'VITÓRIA':gA===gB?'EMPATE':'DERROTA'} ${gA}-${gB} vs ${oppOriginal.nomeEquipa}</span></div><div class="match-scorers">${goalsLog}</div>`; blockUCL.appendChild(mCard);
     }
 
-    for(let k=1; k<36; k++) { uclTable[k].points += Math.floor(Math.random()*14)+4; uclTable[k].gf += Math.floor(Math.random()*12); }
-    uclTable.sort((a,b) => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga));
+    for(let k=1; k<36; k++) { 
+        let rngPts = Math.floor(Math.random()*13)+5;
+        uclTable[k].points += rngPts;
+        uclTable[k].w = Math.floor(rngPts/3); uclTable[k].d = rngPts%3; uclTable[k].l = 8 - uclTable[k].w - uclTable[k].d;
+        uclTable[k].gf += Math.floor(Math.random()*14)+4; uclTable[k].ga += Math.floor(Math.random()*10)+4;
+    }
+    uclTable.sort((a,b) => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf);
     let userRank = uclTable.findIndex(t => t.isUser) + 1;
 
-    let rankCard = document.createElement("div"); rankCard.className = "match-card"; rankCard.style.textAlign = "center"; rankCard.innerHTML = `<h3>Fase de Liga Concluída</h3><p style="font-size:18px;">Terminaste em <b style="color:var(--pt-gold); font-size:24px;">${userRank}º Lugar</b> na Tabela Geral de 36 Equipas Europeias.</p>`; blockUCL.appendChild(rankCard);
+    let clTableHtml = `<div class="match-card"><h3>Classificação Fase de Liga (36 Equipas)</h3><table class="league-table"><thead><tr><th>Pos</th><th>Equipa</th><th>Pnt</th><th>V</th><th>E</th><th>D</th><th>GM</th><th>GS</th></tr></thead><tbody>`;
+    uclTable.forEach((row, idx) => {
+        let rowClass = row.isUser ? 'user-team-row' : '';
+        if(idx < 8 && row.isUser) rowClass = 'user-team-row';
+        clTableHtml += `<tr class="${rowClass}"><td>${idx + 1}º</td><td>${row.name}</td><td><b>${row.points}</b></td><td>${row.w}</td><td>${row.d}</td><td>${row.l}</td><td>${row.gf}</td><td>${row.ga}</td></tr>`;
+    });
+    clTableHtml += `</tbody></table></div>`;
+    let clTableWrapper = document.createElement("div"); clTableWrapper.innerHTML = clTableHtml; blockUCL.appendChild(clTableWrapper);
 
     if (userRank >= 25) {
-        let failCard = document.createElement("div"); failCard.className = "match-card"; failCard.style.borderLeft = "6px solid var(--pt-red)"; failCard.innerHTML = `<div class="match-header" style="color:var(--pt-red)">Eliminação Direta</div><p>Posição ${userRank}º está fora do Top 24. Foste eliminado da UEFA Champions League.</p>`;
+        let failCard = document.createElement("div"); failCard.className = "match-card"; failCard.style.borderLeft = "6px solid var(--pt-red)"; failCard.innerHTML = `<div class="match-header" style="color:var(--pt-red)">Eliminação Direta</div><p>Posição ${userRank}º está fora do Top 24. Foste eliminado e não avanças na Champions.</p>`;
         blockUCL.appendChild(failCard); timeline.appendChild(blockUCL); return;
     }
 
-    let ch1 = userRank <= 8 ? true : evalCupStage(scores, 88, 86); 
-    if(userRank > 8) { appendTwoLeggedTie(blockUCL, "Playoffs de Acesso", tableData[0], uniqueUclClubs[18], ch1); }
-    let ch2 = ch1 ? evalCupStage(scores, 88, 86) : false; if(ch1) { appendTwoLeggedTie(blockUCL, "Oitavos de Final", tableData[0], uniqueUclClubs[19], ch2); }
-    let ch3 = ch2 ? evalCupStage(scores, 88, 86) : false; if(ch2) { appendTwoLeggedTie(blockUCL, "Quartos de Final", tableData[0], uniqueUclClubs[20], ch3); }
-    let ch4 = ch3 ? evalCupStage(scores, 88, 86) : false; if(ch3) { appendTwoLeggedTie(blockUCL, "Meias-Finais", tableData[0], uniqueUclClubs[21], ch4); }
-    let ch5 = ch4 ? evalCupStage(scores, 88, 86) : false; if(ch4) appendDetailedMatchCard(blockUCL, "Grande Final Europeia (Jogo Único)", tableData[0], uniqueUclClubs[22], ch5, false);
+    let chStatus = userRank <= 8 ? true : evalCupStage(scores, 88, 86); 
+    if(userRank > 8) { appendTwoLeggedTie(blockUCL, "Playoffs de Acesso", tableData[0], uniqueUclClubs[18], chStatus); }
+    let chStatus2 = chStatus ? evalCupStage(scores, 88, 86) : false; if(chStatus) { appendTwoLeggedTie(blockUCL, "Oitavos de Final", tableData[0], uniqueUclClubs[19], chStatus2); }
+    let chStatus3 = chStatus2 ? evalCupStage(scores, 88, 86) : false; if(chStatus2) { appendTwoLeggedTie(blockUCL, "Quartos de Final", tableData[0], uniqueUclClubs[20], chStatus3); }
+    let chStatus4 = chStatus3 ? evalCupStage(scores, 88, 86) : false; if(chStatus3) { appendTwoLeggedTie(blockUCL, "Meias-Finais", tableData[0], uniqueUclClubs[21], chStatus4); }
+    let chStatus5 = chStatus4 ? evalCupStage(scores, 88, 86) : false; if(chStatus4) appendDetailedMatchCard(blockUCL, "Grande Final Europeia (Jogo Único)", tableData[0], uniqueUclClubs[22], chStatus5, false);
     timeline.appendChild(blockUCL);
 
-    let completelyPerfect = (tableData[0].w === 34 && tl3 && tp6 && ch5 && scores.ger >= 90 && scores.def >= 88 && scores.med >= 88 && scores.ata >= 88);
+    let completelyPerfect = (tableData[0].w === 34 && tlStatus3 && tpStatus6 && chStatus5 && scores.ger >= 90 && scores.def >= 88 && scores.med >= 88 && scores.ata >= 88);
     if (completelyPerfect) { screen.classList.add("perfect-screen"); const b = document.createElement("div"); b.style.cssText = "background:#eab308; color:#0f172a; padding:20px; border-radius:8px; font-weight:900; font-size:22px; text-align:center; margin-bottom:20px;"; b.innerText = "⭐ LENDA ABSOLUTA: ALCANÇASTE O 4a0 PERFEITO! QUADRUPLE INVICTO COM OVERALL DE CAMPEÃO ⭐"; timeline.insertBefore(b, timeline.firstChild); }
 }
 
@@ -425,18 +451,24 @@ function updateRoundLabels() { document.getElementById("round-title").innerText 
 
 function triggerPreSeasonOddsDisplay() { 
     const scores = calculateTeamOveralls(); 
-    let oddPerfect = Math.max(1, Math.min(99, (scores.ger - 74) * 6)); if (scores.ger < 86) oddPerfect = 2;
+    let oddLiga = computeDynamicOdds(scores.ger, 86);
+    let oddTp = computeDynamicOdds(scores.ger, 84);
+    let oddTl = computeDynamicOdds(scores.ger, 82);
+    let oddUcl = computeDynamicOdds(scores.ger, 88);
+    
     document.getElementById("proj-place").innerText = scores.ger >= 86 ? "1º Lugar" : scores.ger >= 82 ? "2º Lugar" : "4º Lugar";
     document.getElementById("proj-points").innerText = scores.ger >= 86 ? "102 (Meta)" : Math.round(scores.ger * 0.95);
-    document.getElementById("txt-odd-1").innerText = `${oddPerfect}%`; 
-    document.getElementById("txt-odd-2").innerText = `${Math.max(2, Math.min(95, scores.ger - 5))}%`;
-    document.getElementById("txt-odd-3").innerText = `${Math.max(2, Math.min(95, scores.ger - 8))}%`; 
-    document.getElementById("txt-odd-4").innerText = `${Math.max(1, scores.ger - 78)}%`;
+    
+    document.getElementById("txt-odd-1").innerText = `${oddLiga}%`; 
+    document.getElementById("txt-odd-2").innerText = `${oddTp}%`;
+    document.getElementById("txt-odd-3").innerText = `${oddTl}%`; 
+    document.getElementById("txt-odd-4").innerText = `${oddUcl}%`;
     document.getElementById("projection-zone").style.display = "block"; 
+    
     setTimeout(() => { 
-        document.getElementById("bar-odd-1").style.width = `${oddPerfect}%`; 
-        document.getElementById("bar-odd-2").style.width = `${Math.max(2, Math.min(95, scores.ger - 5))}%`; 
-        document.getElementById("bar-odd-3").style.width = `${Math.max(2, Math.min(95, scores.ger - 8))}%`; 
-        document.getElementById("bar-odd-4").style.width = `${Math.max(1, scores.ger - 78)}%`; 
+        document.getElementById("bar-odd-1").style.width = `${oddLiga}%`; 
+        document.getElementById("bar-odd-2").style.width = `${oddTp}%`; 
+        document.getElementById("bar-odd-3").style.width = `${oddTl}%`; 
+        document.getElementById("bar-odd-4").style.width = `${oddUcl}%`; 
     }, 100);
 }
