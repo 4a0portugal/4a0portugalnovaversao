@@ -1043,7 +1043,6 @@ const RAW_DATABASE = [
       { "nome": "Eurico Gomes", "posicoes": ["DC"], "ovr": 85 },
       { "nome": "Gonçalo Inácio", "posicoes": ["DC"], "ovr": 85 },
       { "nome": "Nuno Mendes", "posicoes": ["DE"], "ovr": 87 },
-      { "nome": "João Palhinha", "posicoes": ["MC"], "ovr": 86 },
       { "nome": "Morten Hjulmand", "posicoes": ["MC"], "ovr": 89 },
       { "nome": "António Oliveira", "posicoes": ["MC"], "ovr": 88 },
       { "nome": "Pedro Gonçalves", "posicoes": ["MC", "EXE", "EXD"], "ovr": 88 },
@@ -1051,14 +1050,14 @@ const RAW_DATABASE = [
       { "nome": "Manuel Vasques", "posicoes": ["MC"], "ovr": 90 },
       { "nome": "Luís Figo", "posicoes": ["EXD"], "ovr": 92 },
       { "nome": "Cristiano Ronaldo", "posicoes": ["EXD", "EXE"], "ovr": 88 },
-      { "nome": "Ricardo Quaresma", "posicoes": ["EXD"], "ovr": 85 },
-      { "nome": "Paulo Futre", "posicoes": ["EXE"], "ovr": 87 },
-      { "nome": "Fernando Peyroteo", "posicoes": ["PL"], "ovr": 94 },
+      { "nome": "Jesus Correia", "posicoes": ["EXD"], "ovr": 89 },
+      { "nome": "Albano", "posicoes": ["EXE"], "ovr": 90 },
+      { "nome": "José Travassos", "posicoes": ["MC", "EXD", "EXE"], "ovr": 92 },
+      { "nome": "Fernando Peyroteo", "posicoes": ["PL"], "ovr": 95 },
       { "nome": "Yazalde", "posicoes": ["PL"], "ovr": 92 },
       { "nome": "Jardel", "posicoes": ["PL"], "ovr": 90 },
       { "nome": "Viktor Gyökeres", "posicoes": ["PL"], "ovr": 91 },
-      { "nome": "Manuel Fernandes", "posicoes": ["PL"], "ovr": 89 },
-      { "nome": "João Vieira Pinto", "posicoes": ["PL", "MC"], "ovr": 89 }
+      { "nome": "Manuel Fernandes", "posicoes": ["PL"], "ovr": 89 }
     ]
   },
 // ==========================================
